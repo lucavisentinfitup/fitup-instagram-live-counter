@@ -11,11 +11,11 @@ function easeOutCubic(progress) {
 }
 
 export default function App() {
-  const [followers, setFollowers] = useState(INITIAL_FOLLOWERS);
   const [displayFollowers, setDisplayFollowers] = useState(INITIAL_FOLLOWERS);
   const [direction, setDirection] = useState("stable");
   const [updatedAt, setUpdatedAt] = useState(new Date());
   const [source, setSource] = useState("fallback");
+
   const previousFollowers = useRef(INITIAL_FOLLOWERS);
   const animationInterval = useRef(null);
   const displayFollowersRef = useRef(INITIAL_FOLLOWERS);
@@ -62,7 +62,6 @@ export default function App() {
     );
 
     previousFollowers.current = normalizedFollowers;
-    setFollowers(normalizedFollowers);
     setUpdatedAt(new Date());
     animateFollowers(displayFollowersRef.current, normalizedFollowers);
   }
@@ -107,54 +106,81 @@ export default function App() {
   const isLive = source === "source_api" || source === "source_api_cached";
 
   return (
-    <main className="app" aria-label="FitUP Instagram live counter">
+    <main className="app">
+      <div className="grid-overlay" />
       <div className="laser laser-one" />
       <div className="laser laser-two" />
       <div className="laser laser-three" />
-      <div className="laser laser-four" />
-      <div className="ambient ambient-left" />
-      <div className="ambient ambient-right" />
 
-      <section className="hero-shell">
-        <header className="profile-card" aria-label="Profilo Instagram FitUP">
-          <div className="profile-identity">
+      <section className="dashboard-shell">
+        <header className="topbar">
+          <div className="brand-block">
             <img
               src="https://fitup.it/wp-content/uploads/2022/09/logo-fitup.png"
-              alt="Logo FitUP"
-              className="logo"
+              alt="FitUP"
+              className="brand-logo"
             />
 
-            <div className="profile-copy">
-              <span className="eyebrow">Instagram Live Counter</span>
-              <h1>FitUP</h1>
-              <p>@fitup.it</p>
+            <div>
+              <span className="eyebrow">Realtime Instagram Analytics</span>
+              <h1>FitUP Live Counter</h1>
             </div>
           </div>
 
-          <div className="profile-status" aria-label="Stato aggiornamento">
+          <div className="live-pill">
             <span className="status-dot" />
-            {isLive ? "Live Source" : "Fallback Mode"}
+            {isLive ? "LIVE SOURCE" : "FALLBACK MODE"}
           </div>
         </header>
 
-        <section className={`counter-card counter-${direction}`} aria-label="Numero follower Instagram">
-          <div className="counter-overline">Follower Counter</div>
+        <section className="hero-card">
+          <div className="hero-header">
+            <div className="instagram-block">
+              <div className="instagram-icon">◎</div>
 
-          <div className="counter-number odometer-number" aria-live="polite">
-            {displayFollowers.toLocaleString("en-US")}
+              <div>
+                <h2>fitup.it</h2>
+                <p>Follower Instagram Live</p>
+              </div>
+            </div>
+
+            <div className="timestamp-block">
+              <span>Ultimo aggiornamento</span>
+
+              <strong>
+                {updatedAt.toLocaleTimeString("it-IT", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit"
+                })}
+              </strong>
+            </div>
           </div>
 
-          <div className="counter-label">
-            Followers <span aria-hidden="true">👥</span>
+          <div className={`counter-wrapper counter-${direction}`}>
+            <span className="counter-title">Followers</span>
+
+            <div className="counter-number">
+              {displayFollowers.toLocaleString("en-US")}
+            </div>
           </div>
 
-          <p className="updated-at">
-            Aggiornato {updatedAt.toLocaleTimeString("it-IT", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit"
-            })}
-          </p>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <span>Following</span>
+              <strong>351</strong>
+            </div>
+
+            <div className="stat-card">
+              <span>Posts</span>
+              <strong>474</strong>
+            </div>
+
+            <div className="stat-card live-stat">
+              <span>Status</span>
+              <strong>{isLive ? "Realtime" : "Cached"}</strong>
+            </div>
+          </div>
         </section>
       </section>
     </main>
