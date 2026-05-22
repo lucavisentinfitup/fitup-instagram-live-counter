@@ -29,11 +29,6 @@ body {
   overflow-x: hidden;
 }
 
-img {
-  display: block;
-  max-width: 100%;
-}
-
 .app {
   position: relative;
   width: 100%;
@@ -58,8 +53,6 @@ img {
     radial-gradient(circle, rgba(141,198,63,.18) 1px, transparent 1px),
     linear-gradient(120deg, transparent 0 48%, rgba(141,198,63,.06) 49%, transparent 51%);
   background-size: 24px 24px, 100% 100%;
-  mask-image: radial-gradient(circle at center, black 0%, transparent 72%);
-  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 72%);
 }
 
 .laser {
@@ -113,11 +106,26 @@ img {
   gap: 22px;
 }
 
-.brand-logo {
-  width: clamp(145px, 16vw, 260px);
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 0 22px rgba(141,198,63,.35));
+.brand-wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: .8;
+  filter: drop-shadow(0 0 18px rgba(141,198,63,.22));
+}
+
+.brand-wordmark span {
+  color: var(--fitup-green);
+  font-size: clamp(3rem, 5vw, 6rem);
+  font-weight: 950;
+  letter-spacing: -.08em;
+}
+
+.brand-wordmark strong {
+  color: white;
+  font-size: clamp(3.2rem, 5.5vw, 6.6rem);
+  font-weight: 950;
+  letter-spacing: -.12em;
 }
 
 .eyebrow {
@@ -150,7 +158,6 @@ img {
   color: var(--fitup-green-light);
   font-size: clamp(.85rem, 1vw, 1.1rem);
   font-weight: 800;
-  letter-spacing: .04em;
 }
 
 .status-dot {
@@ -193,7 +200,6 @@ img {
   font-size: clamp(2rem, 3vw, 3rem);
   font-weight: 900;
   background: radial-gradient(circle at 30% 20%, #fff, #ffcf33 18%, #fd1d1d 48%, #833ab4 82%);
-  box-shadow: 0 0 30px rgba(255,255,255,.18);
 }
 
 .instagram-block h2 {
@@ -223,7 +229,6 @@ img {
   border-radius: 999px;
   background: rgba(8,8,8,.72);
   border: 1px solid rgba(255,255,255,.08);
-  box-shadow: inset 0 0 0 1px rgba(141,198,63,.06);
 }
 
 .timestamp-block span {
@@ -252,20 +257,9 @@ img {
   box-shadow:
     0 0 80px rgba(141,198,63,.14),
     inset 0 0 75px rgba(141,198,63,.05);
-  overflow: hidden;
-}
-
-.counter-wrapper::before {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  background: radial-gradient(circle at center, rgba(141,198,63,.18), transparent 38%);
-  opacity: .7;
 }
 
 .counter-title {
-  position: relative;
-  z-index: 2;
   margin-bottom: 16px;
   color: rgba(255,255,255,.9);
   text-transform: uppercase;
@@ -275,8 +269,6 @@ img {
 }
 
 .counter-number {
-  position: relative;
-  z-index: 2;
   color: #fff;
   font-size: clamp(6rem, 16vw, 15rem);
   font-weight: 950;
@@ -294,17 +286,14 @@ img {
     0 0 18px rgba(255,255,255,.4),
     0 0 55px rgba(141,198,63,.75),
     0 0 120px rgba(141,198,63,.42);
-  animation: positive-pop .45s ease;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0;
   border: 1px solid rgba(141,198,63,.65);
   border-radius: 28px;
   background: rgba(0,0,0,.64);
-  box-shadow: 0 0 55px rgba(141,198,63,.08);
   overflow: hidden;
 }
 
@@ -327,14 +316,12 @@ img {
   text-transform: uppercase;
   letter-spacing: .12em;
   font-weight: 750;
-  font-size: clamp(.78rem, .9vw, .95rem);
 }
 
 .stat-card strong {
   margin-top: 8px;
   color: #fff;
   font-size: clamp(2rem, 3vw, 3.4rem);
-  line-height: 1;
 }
 
 .live-stat strong {
@@ -342,84 +329,24 @@ img {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: .55;
     transform: scale(1.35);
   }
 }
 
-@keyframes positive-pop {
-  0% {
-    transform: scale(.97);
-  }
-  50% {
-    transform: scale(1.025);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@media (max-width: 1100px) {
-  .timestamp-block {
-    position: static;
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
   }
 
   .hero-header {
     flex-direction: column;
-  }
-
-  .topbar {
-    align-items: center;
-  }
-}
-
-@media (max-width: 768px) {
-  .app {
-    padding: 18px;
-  }
-
-  .dashboard-shell {
-    min-height: auto;
-    gap: 28px;
-  }
-
-  .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .brand-block {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .brand-logo {
-    width: 160px;
-  }
-
-  .live-pill,
-  .timestamp-block {
-    width: 100%;
-  }
-
-  .instagram-block {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .counter-wrapper {
-    min-height: 330px;
-    border-radius: 28px;
-  }
-
-  .counter-number {
-    font-size: clamp(4.8rem, 24vw, 8rem);
   }
 
   .stats-grid {
@@ -431,21 +358,11 @@ img {
     border-bottom: 1px solid rgba(255,255,255,.14);
   }
 
-  .stat-card:last-child {
-    border-bottom: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .brand-logo {
-    width: 132px;
+  .brand-wordmark span {
+    font-size: 3.4rem;
   }
 
-  .instagram-block h2 {
-    font-size: 2.9rem;
-  }
-
-  .counter-number {
-    font-size: 4.8rem;
+  .brand-wordmark strong {
+    font-size: 3.8rem;
   }
 }
