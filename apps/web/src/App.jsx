@@ -104,44 +104,58 @@ export default function App() {
     };
   }, []);
 
+  const isLive = source === "source_api" || source === "source_api_cached";
+
   return (
     <main className="app" aria-label="FitUP Instagram live counter">
-      <section className="profile-card" aria-label="Profilo Instagram FitUP">
-        <div className="profile-identity">
-          <img
-            src="https://fitup.it/wp-content/uploads/2022/09/logo-fitup.png"
-            alt="Logo FitUP"
-            className="logo"
-          />
+      <div className="laser laser-one" />
+      <div className="laser laser-two" />
+      <div className="laser laser-three" />
+      <div className="laser laser-four" />
+      <div className="ambient ambient-left" />
+      <div className="ambient ambient-right" />
 
-          <div className="profile-copy">
-            <h1>FitUP</h1>
-            <p>@fitup.it</p>
+      <section className="hero-shell">
+        <header className="profile-card" aria-label="Profilo Instagram FitUP">
+          <div className="profile-identity">
+            <img
+              src="https://fitup.it/wp-content/uploads/2022/09/logo-fitup.png"
+              alt="Logo FitUP"
+              className="logo"
+            />
+
+            <div className="profile-copy">
+              <span className="eyebrow">Instagram Live Counter</span>
+              <h1>FitUP</h1>
+              <p>@fitup.it</p>
+            </div>
           </div>
-        </div>
 
-        <div className="profile-status" aria-label="Stato aggiornamento">
-          <span className="status-dot" />
-          {source === "source_api" || source === "source_api_cached" ? "Live Source" : "Fallback Mode"}
-        </div>
-      </section>
+          <div className="profile-status" aria-label="Stato aggiornamento">
+            <span className="status-dot" />
+            {isLive ? "Live Source" : "Fallback Mode"}
+          </div>
+        </header>
 
-      <section className={`counter-card counter-${direction}`} aria-label="Numero follower Instagram">
-        <div className="counter-number odometer-number" aria-live="polite">
-          {displayFollowers.toLocaleString("en-US")}
-        </div>
+        <section className={`counter-card counter-${direction}`} aria-label="Numero follower Instagram">
+          <div className="counter-overline">Follower Counter</div>
 
-        <div className="counter-label">
-          Followers <span aria-hidden="true">👥</span>
-        </div>
+          <div className="counter-number odometer-number" aria-live="polite">
+            {displayFollowers.toLocaleString("en-US")}
+          </div>
 
-        <p className="updated-at">
-          Aggiornato {updatedAt.toLocaleTimeString("it-IT", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-          })}
-        </p>
+          <div className="counter-label">
+            Followers <span aria-hidden="true">👥</span>
+          </div>
+
+          <p className="updated-at">
+            Aggiornato {updatedAt.toLocaleTimeString("it-IT", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit"
+            })}
+          </p>
+        </section>
       </section>
     </main>
   );
