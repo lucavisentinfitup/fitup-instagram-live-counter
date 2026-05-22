@@ -10,13 +10,23 @@ let cachedAt = 0;
 let inFlightRequest = null;
 
 function buildFallbackPayload(message = "Using fallback value.") {
+  if (cachedPayload?.followers) {
+    return {
+      ...cachedPayload,
+      source: "source_api_cached",
+      configured: true,
+      message,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
   return {
     username: TARGET_USERNAME,
-    followers: cachedPayload?.followers || FALLBACK_FOLLOWERS,
-    following: cachedPayload?.following || null,
-    posts: cachedPayload?.posts || null,
-    avatar: cachedPayload?.avatar || null,
-    source: cachedPayload ? "stale_cache" : "fallback",
+    followers: FALLBACK_FOLLOWERS,
+    following: null,
+    posts: null,
+    avatar: null,
+    source: "fallback",
     configured: false,
     message,
     updatedAt: new Date().toISOString()
@@ -89,7 +99,7 @@ export default async function handler(req, res) {
 
   if (inFlightRequest) {
     const payload = cachedPayload && cacheAge < STALE_TTL_MS
-      ? cachedPayload
+      ? { ...cachedPayload, source: "source_api_cached", configured: true }
       : buildFallbackPayload("Refresh already in progress.");
 
     return res.status(200).json({
