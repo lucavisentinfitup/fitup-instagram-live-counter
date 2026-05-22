@@ -1,12 +1,41 @@
-const CACHE_TTL_MS = Number(process.env.CACHE_TTL_SECONDS || 300) * 1000;
+const CACHE_TTL_MS = Number(process.env.CACHE_TTL_SECONDS || 60) * 1000;
+const TARGET_USERNAME = process.env.INSTAGRAM_USERNAME || "fitup.it";
+const SOURCE_URL = `https://instastatistics.com/${TARGET_USERNAME}`;
+const FALLBACK_FOLLOWERS = Number(process.env.FALLBACK_FOLLOWERS || 8079);
 
 let cachedPayload = null;
 let cachedAt = 0;
+
+function parseFollowersFromHtml(html) {
+  const normalizedHtml = html.replace(/\s+/g, " ");
+
+  const patterns = [
+    /"followers"\s*:\s*([0-9]+)/i,
+    /"followers_count"\s*:\s*([0-9]+)/i,
+    /followers[^0-9]{0,80}([0-9][0-9,.]*)/i,
+    /([0-9][0-9,.]*)\s*followers/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = normalizedHtml.match(pattern);
+
+    if (match?.[1]) {
+      const followers = Number(String(match[1]).replace(/[^0-9]/g, ""));
+
+      if (Number.isFinite(followers) && followers > 0) {
+        return followers;
+      }
+    }
+  }
+
+  return null;
+}
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Cache-Control", "no-store");
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();
@@ -25,40 +54,38 @@ export default async function handler(req, res) {
     });
   }
 
-  const instagramUserId = process.env.INSTAGRAM_USER_ID;
-  const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-
-  if (!instagramUserId || !accessToken) {
-    return res.status(200).json({
-      username: "fitup.it",
-      followers: 8079,
-      source: "fallback",
-      configured: false,
-      message: "Configure INSTAGRAM_USER_ID and INSTAGRAM_ACCESS_TOKEN in Vercel to enable real Instagram data.",
-      updatedAt: new Date().toISOString()
-    });
-  }
-
   try {
-    const graphUrl = new URL(`https://graph.facebook.com/v20.0/${instagramUserId}`);
-    graphUrl.searchParams.set("fields", "username,followers_count");
-    graphUrl.searchParams.set("access_token", accessToken);
+    const response = await fetch(SOURCE_URL, {
+      headers: {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "accept-language": "it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7",
+        "user-agent": "Mozilla/5.0 (compatible; FitUPCounter/1.0; +https://fitup.it)"
+      }
+    });
 
-    const response = await fetch(graphUrl.toString());
-    const data = await response.json();
+    const html = await response.text();
+    const followers = parseFollowersFromHtml(html);
 
-    if (!response.ok || typeof data.followers_count !== "number") {
-      return res.status(502).json({
-        error: "Instagram Graph API error",
-        details: data,
+    if (!response.ok || !followers) {
+      cachedPayload = {
+        username: TARGET_USERNAME,
+        followers: FALLBACK_FOLLOWERS,
+        source: "fallback",
+        sourceUrl: SOURCE_URL,
+        configured: false,
+        message: "Unable to parse follower count from Instastatistics. Using fallback value.",
         updatedAt: new Date().toISOString()
-      });
+      };
+      cachedAt = now;
+
+      return res.status(200).json(cachedPayload);
     }
 
     cachedPayload = {
-      username: data.username || "fitup.it",
-      followers: data.followers_count,
-      source: "instagram_graph_api",
+      username: TARGET_USERNAME,
+      followers,
+      source: "instastatistics",
+      sourceUrl: SOURCE_URL,
       configured: true,
       updatedAt: new Date().toISOString()
     };
@@ -66,10 +93,17 @@ export default async function handler(req, res) {
 
     return res.status(200).json(cachedPayload);
   } catch (error) {
-    return res.status(500).json({
-      error: "Unable to fetch Instagram followers",
-      details: error.message,
+    cachedPayload = {
+      username: TARGET_USERNAME,
+      followers: FALLBACK_FOLLOWERS,
+      source: "fallback",
+      sourceUrl: SOURCE_URL,
+      configured: false,
+      message: error.message,
       updatedAt: new Date().toISOString()
-    });
+    };
+    cachedAt = now;
+
+    return res.status(200).json(cachedPayload);
   }
 }
