@@ -2,9 +2,9 @@ import "./styles.css";
 import { useEffect, useRef, useState } from "react";
 
 const INITIAL_FOLLOWERS = 8079;
-const REFRESH_INTERVAL_MS = 5000;
-const ANIMATION_DURATION_MS = 1200;
-const ANIMATION_FRAME_MS = 50;
+const REFRESH_INTERVAL_MS = 1000;
+const ANIMATION_DURATION_MS = 700;
+const ANIMATION_FRAME_MS = 33;
 
 function easeOutCubic(progress) {
   return 1 - Math.pow(1 - progress, 3);
