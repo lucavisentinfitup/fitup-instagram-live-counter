@@ -5,6 +5,7 @@ const TARGET_USERNAME = process.env.INSTAGRAM_USERNAME || "fitup.it";
 const SOURCE_URL = `https://instastatistics.com/${TARGET_USERNAME}`;
 const FALLBACK_FOLLOWERS = Number(process.env.FALLBACK_FOLLOWERS || 8079);
 const MIN_PLAUSIBLE_FOLLOWERS = Number(process.env.MIN_PLAUSIBLE_FOLLOWERS || 1000);
+const MAX_PLAUSIBLE_FOLLOWERS = Number(process.env.MAX_PLAUSIBLE_FOLLOWERS || 100000);
 
 let cachedPayload = null;
 let cachedAt = 0;
@@ -65,24 +66,29 @@ function collectFollowerCandidates(text) {
     }
   }
 
-  return candidates;
+  return [...new Set(candidates)];
 }
 
 function parseFollowersFromHtml(html) {
   const candidates = collectFollowerCandidates(html)
-    .filter((value) => value >= MIN_PLAUSIBLE_FOLLOWERS && value < 1000000000);
+    .filter((value) => value >= MIN_PLAUSIBLE_FOLLOWERS && value <= MAX_PLAUSIBLE_FOLLOWERS);
 
   if (!candidates.length) {
     return null;
   }
 
-  const exactCandidates = candidates.filter((value) => value % 100 !== 0);
+  const expectedFollowers = cachedPayload?.followers || FALLBACK_FOLLOWERS;
 
-  if (exactCandidates.length) {
-    return exactCandidates.sort((a, b) => b - a)[0];
-  }
+  return candidates.sort((a, b) => {
+    const distanceA = Math.abs(a - expectedFollowers);
+    const distanceB = Math.abs(b - expectedFollowers);
 
-  return candidates.sort((a, b) => b - a)[0];
+    if (distanceA !== distanceB) {
+      return distanceA - distanceB;
+    }
+
+    return b - a;
+  })[0];
 }
 
 function buildFallbackPayload(message = "Using fallback value.") {
