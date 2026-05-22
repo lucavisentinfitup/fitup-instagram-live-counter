@@ -115,11 +115,10 @@ export default function App() {
       <section className="dashboard-shell">
         <header className="topbar">
           <div className="brand-block">
-            <img
-              src="https://fitup.it/wp-content/uploads/2022/09/logo-fitup.png"
-              alt="FitUP"
-              className="brand-logo"
-            />
+            <div className="brand-wordmark" aria-label="FitUP">
+              <span>FiT</span>
+              <strong>UP</strong>
+            </div>
 
             <div>
               <span className="eyebrow">Realtime Instagram Analytics</span>
