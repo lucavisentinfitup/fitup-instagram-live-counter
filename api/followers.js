@@ -4,34 +4,85 @@ const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 6000);
 const TARGET_USERNAME = process.env.INSTAGRAM_USERNAME || "fitup.it";
 const SOURCE_URL = `https://instastatistics.com/${TARGET_USERNAME}`;
 const FALLBACK_FOLLOWERS = Number(process.env.FALLBACK_FOLLOWERS || 8079);
+const MIN_PLAUSIBLE_FOLLOWERS = Number(process.env.MIN_PLAUSIBLE_FOLLOWERS || 1000);
 
 let cachedPayload = null;
 let cachedAt = 0;
 let inFlightRequest = null;
 
-function parseFollowersFromHtml(html) {
-  const normalizedHtml = html.replace(/\s+/g, " ");
+function decodeHtmlEntities(value) {
+  return String(value)
+    .replace(/&quot;/g, '"')
+    .replace(/&#34;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
+function parseHumanNumber(value) {
+  const raw = String(value).trim().toLowerCase();
+  const multiplier = raw.includes('m') ? 1000000 : raw.includes('k') ? 1000 : 1;
+  const cleaned = raw
+    .replace(/,/g, '')
+    .replace(/[^0-9.]/g, '');
+
+  if (!cleaned) {
+    return null;
+  }
+
+  const parsed = Number(cleaned);
+
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.round(parsed * multiplier);
+}
+
+function collectFollowerCandidates(text) {
+  const candidates = [];
+  const normalizedText = decodeHtmlEntities(text).replace(/\s+/g, ' ');
 
   const patterns = [
-    /"followers"\s*:\s*([0-9]+)/i,
-    /"followers_count"\s*:\s*([0-9]+)/i,
-    /followers[^0-9]{0,80}([0-9][0-9,.]*)/i,
-    /([0-9][0-9,.]*)\s*followers/i
+    /"followers"\s*:\s*"?([0-9][0-9,.]*\s*[km]?)"?/gi,
+    /"followers_count"\s*:\s*"?([0-9][0-9,.]*\s*[km]?)"?/gi,
+    /"followerCount"\s*:\s*"?([0-9][0-9,.]*\s*[km]?)"?/gi,
+    /data-[a-z0-9_-]*followers[a-z0-9_-]*=["']([0-9][0-9,.]*\s*[km]?)["']/gi,
+    /aria-label=["'][^"']*?([0-9][0-9,.]*\s*[km]?)[^"']*?followers?[^"']*["']/gi,
+    /([0-9][0-9,.]*\s*[km]?)\s*followers?\b/gi,
+    /followers?\b[^0-9]{0,120}([0-9][0-9,.]*\s*[km]?)/gi
   ];
 
   for (const pattern of patterns) {
-    const match = normalizedHtml.match(pattern);
+    let match;
 
-    if (match?.[1]) {
-      const followers = Number(String(match[1]).replace(/[^0-9]/g, ""));
+    while ((match = pattern.exec(normalizedText)) !== null) {
+      const followers = parseHumanNumber(match[1]);
 
-      if (Number.isFinite(followers) && followers > 0) {
-        return followers;
+      if (Number.isFinite(followers)) {
+        candidates.push(followers);
       }
     }
   }
 
-  return null;
+  return candidates;
+}
+
+function parseFollowersFromHtml(html) {
+  const candidates = collectFollowerCandidates(html)
+    .filter((value) => value >= MIN_PLAUSIBLE_FOLLOWERS && value < 1000000000);
+
+  if (!candidates.length) {
+    return null;
+  }
+
+  const exactCandidates = candidates.filter((value) => value % 100 !== 0);
+
+  if (exactCandidates.length) {
+    return exactCandidates.sort((a, b) => b - a)[0];
+  }
+
+  return candidates.sort((a, b) => b - a)[0];
 }
 
 function buildFallbackPayload(message = "Using fallback value.") {
@@ -66,7 +117,7 @@ async function fetchFollowersFromSource() {
     const followers = parseFollowersFromHtml(html);
 
     if (!response.ok || !followers) {
-      return buildFallbackPayload("Unable to parse follower count from Instastatistics. Serving cached or fallback value.");
+      return buildFallbackPayload("Unable to parse a plausible follower count from Instastatistics. Serving cached or fallback value.");
     }
 
     return {
