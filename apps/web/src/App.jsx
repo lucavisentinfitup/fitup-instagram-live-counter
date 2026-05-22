@@ -1,12 +1,39 @@
 import "./styles.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const INITIAL_FOLLOWERS = 8079;
 const REFRESH_INTERVAL_MS = 30000;
+const DEMO_TICK_MS = 4500;
+
+function getRandomFollowerDelta() {
+  const movement = Math.random();
+
+  if (movement < 0.45) return 0;
+  if (movement < 0.75) return 1;
+  return -1;
+}
 
 export default function App() {
   const [followers, setFollowers] = useState(INITIAL_FOLLOWERS);
+  const [direction, setDirection] = useState("stable");
   const [updatedAt, setUpdatedAt] = useState(new Date());
+  const previousFollowers = useRef(INITIAL_FOLLOWERS);
+
+  function updateFollowers(nextFollowers) {
+    const normalizedFollowers = Math.max(0, Number(nextFollowers));
+
+    setDirection(
+      normalizedFollowers > previousFollowers.current
+        ? "up"
+        : normalizedFollowers < previousFollowers.current
+          ? "down"
+          : "stable"
+    );
+
+    previousFollowers.current = normalizedFollowers;
+    setFollowers(normalizedFollowers);
+    setUpdatedAt(new Date());
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -17,8 +44,7 @@ export default function App() {
         const data = await response.json();
 
         if (isMounted && Number.isFinite(Number(data.followers))) {
-          setFollowers(Number(data.followers));
-          setUpdatedAt(new Date());
+          updateFollowers(data.followers);
         }
       } catch (error) {
         console.error(error);
@@ -32,6 +58,28 @@ export default function App() {
       isMounted = false;
       clearInterval(interval);
     };
+  }, []);
+
+  useEffect(() => {
+    const demoInterval = setInterval(() => {
+      setFollowers((currentFollowers) => {
+        const nextFollowers = Math.max(0, currentFollowers + getRandomFollowerDelta());
+
+        setDirection(
+          nextFollowers > currentFollowers
+            ? "up"
+            : nextFollowers < currentFollowers
+              ? "down"
+              : "stable"
+        );
+
+        previousFollowers.current = nextFollowers;
+        setUpdatedAt(new Date());
+        return nextFollowers;
+      });
+    }, DEMO_TICK_MS);
+
+    return () => clearInterval(demoInterval);
   }, []);
 
   return (
@@ -52,12 +100,12 @@ export default function App() {
 
         <div className="profile-status" aria-label="Stato aggiornamento">
           <span className="status-dot" />
-          Live counter
+          Live demo
         </div>
       </section>
 
-      <section className="counter-card" aria-label="Numero follower Instagram">
-        <div className="counter-number" aria-live="polite">
+      <section className={`counter-card counter-${direction}`} aria-label="Numero follower Instagram">
+        <div className="counter-number" aria-live="polite" key={followers}>
           {followers.toLocaleString("en-US")}
         </div>
 
@@ -66,7 +114,7 @@ export default function App() {
         </div>
 
         <p className="updated-at">
-          Aggiornato {updatedAt.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+          Aggiornato {updatedAt.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </p>
       </section>
     </main>
