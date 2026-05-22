@@ -23,6 +23,7 @@ body {
     radial-gradient(circle at top, rgba(92, 31, 255, 0.25), transparent 35%),
     linear-gradient(180deg, #0a0a0a 0%, #111111 100%);
   color: white;
+  overflow-x: hidden;
 }
 
 img {
@@ -100,6 +101,7 @@ img {
   border-radius: 999px;
   background: #4cff71;
   box-shadow: 0 0 12px #4cff71;
+  animation: pulse 1.5s infinite;
 }
 
 .counter-card {
@@ -118,6 +120,18 @@ img {
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 12px 40px rgba(0,0,0,.35);
+  transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease;
+}
+
+.counter-up {
+  border-color: rgba(76,255,113,.5);
+  box-shadow: 0 0 40px rgba(76,255,113,.15);
+  transform: scale(1.01);
+}
+
+.counter-down {
+  border-color: rgba(255,80,80,.45);
+  box-shadow: 0 0 40px rgba(255,80,80,.15);
 }
 
 .counter-number {
@@ -126,6 +140,19 @@ img {
   line-height: 1;
   letter-spacing: -0.06em;
   word-break: break-word;
+  animation: pop .35s ease;
+}
+
+.counter-up .counter-number {
+  color: #7CFF98;
+}
+
+.counter-down .counter-number {
+  color: #FF7C7C;
+}
+
+.counter-stable .counter-number {
+  color: white;
 }
 
 .counter-label {
@@ -138,6 +165,35 @@ img {
   margin-top: 14px;
   font-size: 0.95rem;
   color: rgba(255,255,255,.5);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: .6;
+    transform: scale(1.35);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(.96);
+    opacity: .6;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @media (max-width: 1024px) {
