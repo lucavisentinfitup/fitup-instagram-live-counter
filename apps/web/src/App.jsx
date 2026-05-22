@@ -2,7 +2,7 @@ import "./styles.css";
 import { useEffect, useRef, useState } from "react";
 
 const INITIAL_FOLLOWERS = 8079;
-const REFRESH_INTERVAL_MS = 30000;
+const REFRESH_INTERVAL_MS = 5000;
 const ANIMATION_DURATION_MS = 1200;
 const ANIMATION_FRAME_MS = 50;
 
@@ -18,12 +18,14 @@ export default function App() {
   const [source, setSource] = useState("fallback");
   const previousFollowers = useRef(INITIAL_FOLLOWERS);
   const animationInterval = useRef(null);
+  const displayFollowersRef = useRef(INITIAL_FOLLOWERS);
 
   function animateFollowers(fromValue, toValue) {
     clearInterval(animationInterval.current);
 
     if (fromValue === toValue) {
       setDisplayFollowers(toValue);
+      displayFollowersRef.current = toValue;
       return;
     }
 
@@ -36,10 +38,12 @@ export default function App() {
       const easedProgress = easeOutCubic(progress);
       const nextValue = Math.round(fromValue + difference * easedProgress);
 
+      displayFollowersRef.current = nextValue;
       setDisplayFollowers(nextValue);
 
       if (progress >= 1) {
         clearInterval(animationInterval.current);
+        displayFollowersRef.current = toValue;
         setDisplayFollowers(toValue);
       }
     }, ANIMATION_FRAME_MS);
@@ -60,7 +64,7 @@ export default function App() {
     previousFollowers.current = normalizedFollowers;
     setFollowers(normalizedFollowers);
     setUpdatedAt(new Date());
-    animateFollowers(displayFollowers, normalizedFollowers);
+    animateFollowers(displayFollowersRef.current, normalizedFollowers);
   }
 
   useEffect(() => {
@@ -98,7 +102,7 @@ export default function App() {
       clearInterval(interval);
       clearInterval(animationInterval.current);
     };
-  }, [displayFollowers]);
+  }, []);
 
   return (
     <main className="app" aria-label="FitUP Instagram live counter">
@@ -118,7 +122,7 @@ export default function App() {
 
         <div className="profile-status" aria-label="Stato aggiornamento">
           <span className="status-dot" />
-          {source === "instastatistics" ? "Live Source" : "Fallback Mode"}
+          {source === "source_api" || source === "source_api_cached" ? "Live Source" : "Fallback Mode"}
         </div>
       </section>
 
