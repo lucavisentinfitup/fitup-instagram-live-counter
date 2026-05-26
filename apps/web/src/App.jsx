@@ -2,7 +2,10 @@ import "./styles.css";
 import { useEffect, useRef, useState } from "react";
 
 const INITIAL_FOLLOWERS = 8079;
-const REFRESH_INTERVAL_MS = 1000;
+const FAST_POLL_MS = 500;
+const NORMAL_POLL_MS = 1000;
+const SLOW_POLL_MS = 5000;
+const BOOST_WINDOW_MS = 15000;
 const ANIMATION_DURATION_MS = 700;
 const ANIMATION_FRAME_MS = 33;
 
@@ -15,10 +18,14 @@ export default function App() {
   const [direction, setDirection] = useState("stable");
   const [updatedAt, setUpdatedAt] = useState(new Date());
   const [source, setSource] = useState("fallback");
+  const [syncStatus, setSyncStatus] = useState("syncing");
 
   const previousFollowers = useRef(INITIAL_FOLLOWERS);
   const animationInterval = useRef(null);
   const displayFollowersRef = useRef(INITIAL_FOLLOWERS);
+  const pollTimeout = useRef(null);
+  const lastChangeAt = useRef(0);
+  const stableCycles = useRef(0);
 
   function animateFollowers(fromValue, toValue) {
     clearInterval(animationInterval.current);
@@ -52,6 +59,7 @@ export default function App() {
   function updateFollowers(nextFollowers) {
     const normalizedFollowers = Math.max(0, Number(nextFollowers));
     const previousValue = previousFollowers.current;
+    const hasChanged = normalizedFollowers !== previousValue;
 
     setDirection(
       normalizedFollowers > previousValue
@@ -61,9 +69,31 @@ export default function App() {
           : "stable"
     );
 
+    if (hasChanged) {
+      lastChangeAt.current = Date.now();
+      stableCycles.current = 0;
+    } else {
+      stableCycles.current += 1;
+    }
+
     previousFollowers.current = normalizedFollowers;
     setUpdatedAt(new Date());
     animateFollowers(displayFollowersRef.current, normalizedFollowers);
+  }
+
+  function getNextPollDelay() {
+    const now = Date.now();
+    const isBoostWindow = lastChangeAt.current && now - lastChangeAt.current < BOOST_WINDOW_MS;
+
+    if (isBoostWindow) {
+      return FAST_POLL_MS;
+    }
+
+    if (stableCycles.current < 8) {
+      return NORMAL_POLL_MS;
+    }
+
+    return SLOW_POLL_MS;
   }
 
   useEffect(() => {
@@ -71,8 +101,14 @@ export default function App() {
 
     async function loadFollowers() {
       try {
-        const response = await fetch("/api/followers", {
-          cache: "no-store"
+        setSyncStatus((current) => current === "live" ? "syncing" : current);
+
+        const response = await fetch(`/api/followers?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: {
+            "cache-control": "no-cache",
+            pragma: "no-cache"
+          }
         });
 
         const data = await response.json();
@@ -88,22 +124,33 @@ export default function App() {
         if (data.source) {
           setSource(data.source);
         }
+
+        setSyncStatus(data.syncStatus || (data.cached ? "cached" : "live"));
       } catch (error) {
         console.error(error);
+        setSyncStatus("retrying");
+      } finally {
+        if (isMounted) {
+          pollTimeout.current = setTimeout(loadFollowers, getNextPollDelay());
+        }
       }
     }
 
     loadFollowers();
-    const interval = setInterval(loadFollowers, REFRESH_INTERVAL_MS);
 
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      clearTimeout(pollTimeout.current);
       clearInterval(animationInterval.current);
     };
   }, []);
 
   const isLive = source === "source_api" || source === "source_api_cached";
+  const statusLabel = syncStatus === "retrying"
+    ? "SYNCING"
+    : isLive
+      ? "LIVE SOURCE"
+      : "FALLBACK MODE";
 
   return (
     <main className="app">
@@ -128,7 +175,7 @@ export default function App() {
 
           <div className="live-pill">
             <span className="status-dot" />
-            {isLive ? "LIVE SOURCE" : "FALLBACK MODE"}
+            {statusLabel}
           </div>
         </header>
 
@@ -177,7 +224,7 @@ export default function App() {
 
             <div className="stat-card live-stat">
               <span>Status</span>
-              <strong>{isLive ? "Realtime" : "Cached"}</strong>
+              <strong>{syncStatus === "retrying" ? "Syncing" : isLive ? "Realtime" : "Cached"}</strong>
             </div>
           </div>
         </section>
