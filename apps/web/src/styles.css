@@ -106,6 +106,15 @@ body {
   gap: 22px;
 }
 
+.brand-logo {
+  display: block;
+  width: clamp(210px, 18vw, 360px);
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
+  filter: drop-shadow(0 0 18px rgba(141,198,63,.25));
+}
+
 .brand-wordmark {
   display: flex;
   align-items: baseline;
@@ -356,6 +365,10 @@ body {
   .stat-card {
     border-right: 0;
     border-bottom: 1px solid rgba(255,255,255,.14);
+  }
+
+  .brand-logo {
+    width: clamp(170px, 48vw, 260px);
   }
 
   .brand-wordmark span {
