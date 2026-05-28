@@ -8,7 +8,7 @@ const SLOW_POLL_MS = 5000;
 const BOOST_WINDOW_MS = 15000;
 const ANIMATION_DURATION_MS = 700;
 const ANIMATION_FRAME_MS = 33;
-const FITUP_LOGO_SRC = "/Logo_FitUP_originale_sfondo_nero_page-0001-removebg-preview.png";
+const FITUP_LOGO_SRC = "/logo-fitup.png";
 
 function easeOutCubic(progress) {
   return 1 - Math.pow(1 - progress, 3);
