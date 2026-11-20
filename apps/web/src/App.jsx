@@ -1,10 +1,10 @@
 import "./styles.css";
 import { useEffect, useRef, useState } from "react";
 
-// l'API ha una cache di 30 secondi sull'account principale: interrogarla più spesso non dà numeri più freschi
+// l'API ha una cache di 5 secondi sull'account principale: interrogarla più spesso non dà numeri più freschi
 const FAST_POLL_MS = 5000;
-const NORMAL_POLL_MS = 10000;
-const SLOW_POLL_MS = 20000;
+const NORMAL_POLL_MS = 5000;
+const SLOW_POLL_MS = 10000;
 const BOOST_WINDOW_MS = 60000;
 const ANIMATION_DURATION_MS = 700;
 const ANIMATION_FRAME_MS = 33;
