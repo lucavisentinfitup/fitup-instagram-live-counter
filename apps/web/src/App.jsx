@@ -146,7 +146,7 @@ export default function App() {
 
   const isLive = source === "instagram_graph_api" || source === "instagram_graph_api_cached";
   const statusLabel = syncStatus === "retrying" || syncStatus === "syncing" ? "SYNCING" : syncStatus === "live" ? "LIVE · INSTAGRAM API" : syncStatus === "cached" ? "ULTIMO VALORE" : syncStatus === "not_configured" ? "API DA CONFIGURARE" : "NON DISPONIBILE";
-  const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString("it-IT"));
+  const fmt = (n) => (n == null ? "—" : new Intl.NumberFormat("it-IT", { useGrouping: "always" }).format(Number(n)));
 
   return (
     <main className="app">
