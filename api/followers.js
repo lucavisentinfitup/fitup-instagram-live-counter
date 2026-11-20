@@ -13,7 +13,8 @@
 //   INSTAGRAM_USERNAME      default fitup.it
 //   ALLOWED_USERNAMES       espressione regolare degli account interrogabili (default ^fitup[._a-z0-9]*$): l'endpoint è
 //                           pubblico e non deve consumare il limite di chiamate per account qualsiasi
-//   CACHE_TTL_SECONDS       cache dell'account principale (default 30)
+//   CACHE_TTL_SECONDS       cache dell'account principale (default 5: lo schermo delle fiere segna i follower entro pochi
+//                           secondi; il limite di chiamate di un account Business cresce con le sue impressioni)
 //   CLUB_CACHE_TTL_SECONDS  cache degli altri account (default 600)
 //   GRAPH_VERSION           default v21.0
 //
@@ -25,7 +26,7 @@ const TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN || "";
 const IG_ID = process.env.INSTAGRAM_USER_ID || "";
 const MAIN = (process.env.INSTAGRAM_USERNAME || "fitup.it").toLowerCase();
 const ALLOWED = new RegExp(process.env.ALLOWED_USERNAMES || "^fitup[._a-z0-9]*$", "i");
-const TTL_MAIN = 1000 * Number(process.env.CACHE_TTL_SECONDS || 30);
+const TTL_MAIN = 1000 * Number(process.env.CACHE_TTL_SECONDS || 5);
 const TTL_CLUB = 1000 * Number(process.env.CLUB_CACHE_TTL_SECONDS || 600);
 const STALE_MS = 24 * 3600 * 1000;
 const TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 6000);
